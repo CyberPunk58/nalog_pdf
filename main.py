@@ -122,7 +122,7 @@ new_files = []
 
 # Проходим по каждой строке в файле пациентов, начиная с 2-й строки (0 — это заголовок)
 for row in patients_ws.iter_rows(min_row=2, values_only=True):
-    surname, name, patronymic, birthdate, period, amount, inn, passport, issue_date, uploaded = row
+    reference_number, surname, name, patronymic, birthdate, period, amount, inn, passport, issue_date, uploaded = row
 
     # Пропускаем строки, которые уже были обработаны
     if uploaded is not None:
@@ -162,10 +162,16 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
 
         # Заполняем сумму
         write_amount(new_ws, amount)
+        #Записываем копейки
+        write_to_cells('BU', 40, '00')
 
         # Заполняем ИНН (если есть)
         if inn:
-            write_to_cells('I', 30, str(inn))  # Пример: запись ИНН в ячейку A10
+            write_to_cells('I', 30, str(inn))
+
+        # Заполняем номер справки (если есть)
+        if reference_number:
+            write_to_cells('K', 11, str(reference_number))
 
         # Заполняем паспорт (если есть)
         write_passport(new_ws, passport)

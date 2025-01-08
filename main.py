@@ -46,7 +46,7 @@ def write_to_cell_safe(ws, cell_address, value):
     else:
         cell.value = value
 
-#Функция для записи номера паспорта
+# Функция для записи номера паспорта
 def write_passport(ws, passport):
     if not passport:  # Пропускаем, если паспорт отсутствует
         return
@@ -83,7 +83,38 @@ def write_amount(ws, amount):
 
     # Записываем сумму посимвольно
     for index, char in enumerate(amount_str):
-        cell_address = get_cell_address(start_col_letter, row, (index * 2)+2)
+        cell_address = get_cell_address(start_col_letter, row, (index * 2) + 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+# Функция для записи даты выдачи паспорта
+def write_issue_date(ws, issue_date):
+    if not issue_date:  # Пропускаем, если дата отсутствует
+        return
+
+    # Преобразуем дату в строку (если это объект datetime)
+    if isinstance(issue_date, datetime.datetime):
+        issue_date_str = issue_date.strftime('%d.%m.%Y')
+    else:
+        issue_date_str = str(issue_date)
+
+    # Разделяем дату на день, месяц и год
+    day = issue_date_str[:2]  # Первые два символа (день)
+    month = issue_date_str[3:5]  # Вторые два символа (месяц)
+    year = issue_date_str[6:]  # Последние четыре символа (год)
+
+    # Записываем день (начиная с O35)
+    for index, char in enumerate(day):
+        cell_address = get_cell_address('O', 35, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+    # Записываем месяц (начиная с Q35)
+    for index, char in enumerate(month):
+        cell_address = get_cell_address('U', 35, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+    # Записываем год (начиная с AA35)
+    for index, char in enumerate(year):
+        cell_address = get_cell_address('AA', 35, index * 2)
         write_to_cell_safe(ws, cell_address, char)
 
 # Подготавливаем список для хранения имён новых файлов
@@ -139,17 +170,8 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         # Заполняем паспорт (если есть)
         write_passport(new_ws, passport)
 
-        # Заполняем паспорт (если есть)
-        if passport:
-            write_to_cells('B', 10, str(passport))  # Пример: запись паспорта в ячейку B10
-
-        # Заполняем дату выдачи (если есть)
-        if issue_date:
-            if isinstance(issue_date, datetime.datetime):
-                issue_date_str = issue_date.strftime('%d.%m.%Y')
-            else:
-                issue_date_str = str(issue_date)
-            write_to_cells('C', 10, issue_date_str)  # Пример: запись даты выдачи в ячейку C10
+        # Заполняем дату выдачи паспорта (если есть)
+        write_issue_date(new_ws, issue_date)
 
         # Сохраняем изменения
         new_wb.save(new_file_path)

@@ -165,7 +165,7 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
 
         # Заполняем ИНН (если есть)
         if inn:
-            write_to_cells('A', 10, str(inn))  # Пример: запись ИНН в ячейку A10
+            write_to_cells('I', 30, str(inn))  # Пример: запись ИНН в ячейку A10
 
         # Заполняем паспорт (если есть)
         write_passport(new_ws, passport)

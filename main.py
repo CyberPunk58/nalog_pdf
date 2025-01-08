@@ -46,6 +46,27 @@ def write_to_cell_safe(ws, cell_address, value):
     else:
         cell.value = value
 
+#Функция для записи номера паспорта
+def write_passport(ws, passport):
+    if not passport:  # Пропускаем, если паспорт отсутствует
+        return
+
+    passport_str = str(passport)  # Преобразуем номер паспорта в строку
+    start_col = 'AO'  # Начинаем с ячейки AO33
+    row = 33
+
+    # Записываем первые 4 символа
+    for i in range(4):
+        if i < len(passport_str):
+            cell_address = get_cell_address(start_col, row, i * 2)  # Смещение через одну ячейку
+            write_to_cell_safe(ws, cell_address, passport_str[i])
+
+    # Пропускаем две ячейки (смещение на 2 ячейки после первых 4 символов)
+    # Записываем оставшиеся символы
+    for i in range(4, len(passport_str)):
+        cell_address = get_cell_address(start_col, row, i * 2 + 2)  # Смещение + пропуск двух ячеек
+        write_to_cell_safe(ws, cell_address, passport_str[i])
+
 # Функция для записи суммы в строку 40 с учетом смещения
 def write_amount(ws, amount):
     if amount is None:
@@ -114,6 +135,9 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         # Заполняем ИНН (если есть)
         if inn:
             write_to_cells('A', 10, str(inn))  # Пример: запись ИНН в ячейку A10
+
+        # Заполняем паспорт (если есть)
+        write_passport(new_ws, passport)
 
         # Заполняем паспорт (если есть)
         if passport:

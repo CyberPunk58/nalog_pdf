@@ -2,15 +2,31 @@ import openpyxl
 import datetime
 import os
 import shutil
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Загружаем файл с данными пациентов
 patients_file = 'patients.xlsx'  # Укажите путь к вашему файлу
-patients_wb = openpyxl.load_workbook(patients_file)
-patients_ws = patients_wb['Лист1']  # Получаем конкретный лист с данными (Лист1)
+blank_file = 'blank.xlsx'  # Шаблон
 
-# Загружаем файл-шаблон
-blank_file = 'blank.xlsx'  # Укажите путь к вашему шаблону
-blank_file_path = os.path.join(os.getcwd(), blank_file)
+# Проверка существования файлов
+if not os.path.exists(patients_file):
+    raise FileNotFoundError(f"Файл {patients_file} не найден.")
+if not os.path.exists(blank_file):
+    raise FileNotFoundError(f"Файл {blank_file} не найден.")
+
+try:
+    patients_wb = openpyxl.load_workbook(patients_file)
+except Exception as e:
+    logging.error(f"Ошибка при загрузке файла {patients_file}: {e}")
+    exit()
+
+if 'Лист1' not in patients_wb.sheetnames:
+    raise ValueError("Лист 'Лист1' не найден в файле patients.xlsx.")
+
+patients_ws = patients_wb['Лист1']  # Получаем конкретный лист с данными (Лист1)
 
 # Функция для определения адреса ячейки по индексу буквы
 def get_cell_address(base_col, row, index):
@@ -22,62 +38,173 @@ def get_cell_address(base_col, row, index):
 def write_to_cell_safe(ws, cell_address, value):
     cell = ws[cell_address]
     if isinstance(cell, openpyxl.cell.cell.MergedCell):
-        # Получаем диапазон объединения, к которому принадлежит ячейка
         for merge_range in ws.merged_cells.ranges:
             if cell_address in merge_range:
-                # Записываем значение в верхнюю левую ячейку диапазона
                 top_left_cell = merge_range.min_row, merge_range.min_col
                 ws.cell(row=top_left_cell[0], column=top_left_cell[1]).value = value
                 return
     else:
         cell.value = value
 
+# Функция для записи текста посимвольно в ячейки
+def write_to_cells(base_col, row, text, ws):
+    for index, char in enumerate(text):
+        cell_address = get_cell_address(base_col, row, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+# Функция для записи номера паспорта
+def write_passport(ws, passport):
+    if not passport:  # Пропускаем, если паспорт отсутствует
+        return
+
+    passport_str = str(passport)  # Преобразуем номер паспорта в строку
+    start_col = 'AO'  # Начинаем с ячейки AO33
+    row = 33
+
+    # Записываем первые 4 символа
+    for i in range(4):
+        if i < len(passport_str):
+            cell_address = get_cell_address(start_col, row, i * 2)  # Смещение через одну ячейку
+            write_to_cell_safe(ws, cell_address, passport_str[i])
+
+    # Пропускаем две ячейки (смещение на 2 ячейки после первых 4 символов)
+    # Записываем оставшиеся символы
+    for i in range(4, len(passport_str)):
+        cell_address = get_cell_address(start_col, row, i * 2 + 2)  # Смещение + пропуск двух ячеек
+        write_to_cell_safe(ws, cell_address, passport_str[i])
+
+# Функция для записи суммы в строку 40 с учетом смещения
+def write_amount(ws, amount):
+    if amount is None:
+        return  # Пропускаем, если сумма отсутствует
+
+    amount_str = str(amount)  # Преобразуем сумму в строку
+    start_col = 'BQ'  # Начинаем с ячейки BQ40
+    row = 40
+
+    # Вычисляем начальную ячейку с учетом смещения
+    start_col_index = openpyxl.utils.column_index_from_string(start_col)
+    start_col_index -= len(amount_str) * 2  # Смещаем влево на количество символов суммы * 2
+    start_col_letter = openpyxl.utils.get_column_letter(start_col_index)
+
+    # Записываем сумму посимвольно
+    for index, char in enumerate(amount_str):
+        cell_address = get_cell_address(start_col_letter, row, (index * 2) + 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+# Функция для записи даты выдачи паспорта
+def write_issue_date(ws, issue_date):
+    if not issue_date:  # Пропускаем, если дата отсутствует
+        return
+
+    # Преобразуем дату в строку (если это объект datetime)
+    if isinstance(issue_date, datetime.datetime):
+        issue_date_str = issue_date.strftime('%d.%m.%Y')
+    else:
+        issue_date_str = str(issue_date)
+
+    # Разделяем дату на день, месяц и год
+    day = issue_date_str[:2]  # Первые два символа (день)
+    month = issue_date_str[3:5]  # Вторые два символа (месяц)
+    year = issue_date_str[6:]  # Последние четыре символа (год)
+
+    # Записываем день (начиная с O35)
+    for index, char in enumerate(day):
+        cell_address = get_cell_address('O', 35, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+    # Записываем месяц (начиная с Q35)
+    for index, char in enumerate(month):
+        cell_address = get_cell_address('U', 35, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+    # Записываем год (начиная с AA35)
+    for index, char in enumerate(year):
+        cell_address = get_cell_address('AA', 35, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+# Функция для записи периода
+def write_period(base_col, row, period_value, ws):
+    period_str = str(period_value)
+    for index, char in enumerate(period_str):
+        cell_address = get_cell_address(base_col, row, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
 # Подготавливаем список для хранения имён новых файлов
 new_files = []
 
 # Проходим по каждой строке в файле пациентов, начиная с 2-й строки (0 — это заголовок)
 for row in patients_ws.iter_rows(min_row=2, values_only=True):
-    surname, name, patronymic, birthdate, period, amount, uploaded = row
+    reference_number, fio_match, surname, name, patronymic, birthdate, period, amount, inn, passport, issue_date, surname2, name2, patronymic2, uploaded = row
 
-    # Проверяем, нужно ли обрабатывать запись (если 'Загружено' равно None)
-    if uploaded is None:
-        # Конструируем имя нового файла
-        date_created = datetime.datetime.now().strftime('%Y-%m-%d')
-        new_file_name = f'{surname}{name[0]}{patronymic[0]}_{date_created}.xlsx'
-        new_file_path = os.path.join(os.getcwd(), new_file_name)
+    # Пропускаем строки, которые уже были обработаны
+    if uploaded is not None:
+        continue
 
-        # Копируем файл-шаблон в новый файл
-        shutil.copy(blank_file_path, new_file_path)
+    # Создаем имя нового файла
+    date_created = datetime.datetime.now().strftime('%Y-%m-%d')
+    new_file_name = f'{surname}{name[0]}{patronymic[0]}_{date_created}.xlsx'
+    new_file_path = os.path.join(os.getcwd(), new_file_name)
 
-        # Открываем новый файл для редактирования
+    # Копируем шаблон
+    shutil.copy(blank_file, new_file_path)
+
+    try:
         new_wb = openpyxl.load_workbook(new_file_path)
-        new_ws = new_wb.active  # Работаем с активным листом
-
-        # Функция для записи текста посимвольно в ячейки
-        def write_to_cells(base_col, row, text):
-            for index, char in enumerate(text):
-                cell_address = get_cell_address(base_col, row, index * 2)  # Смещение через одну ячейку
-                write_to_cell_safe(new_ws, cell_address, char)
+        new_ws = new_wb.active
 
         # Заполняем фамилию, имя и отчество
-        write_to_cells('I', 24, surname)
-        write_to_cells('I', 26, name)
-        write_to_cells('I', 28, patronymic)
+        write_to_cells('I', 24, surname, new_ws)  # Фамилия начиная с I24
+        write_to_cells('I', 26, name, new_ws)  # Имя начиная с I26
+        write_to_cells('I', 28, patronymic, new_ws)  # Отчество начиная с I28
 
         # Заполняем период
-        def write_period(base_col, row, period_value):
-            period_str = str(period_value)  # Преобразуем численное значение в строку
-            for index, char in enumerate(period_str):
-                cell_address = get_cell_address(base_col, row, index * 2)
-                write_to_cell_safe(new_ws, cell_address, char)
+        write_period('BU', 11, period, new_ws)  # Период начиная с BU11
 
-        write_period('BU', 11, period)
+        # Заполняем сумму
+        write_amount(new_ws, amount)  # Сумма начиная с BQ40
+        write_to_cells('BU', 40, '00', new_ws)  # Копейки начиная с BU40
 
-        # Сохраняем изменения в файле
+        # Заполняем ИНН (если есть)
+        if inn:
+            write_to_cells('I', 30, str(inn), new_ws)  # ИНН начиная с I30
+
+        # Заполняем номер справки (если есть)
+        if reference_number:
+            write_to_cells('K', 11, str(reference_number), new_ws)  # Номер справки начиная с K11
+
+        # Заполняем паспорт (если есть)
+        write_passport(new_ws, passport)  # Паспорт начиная с AO33
+
+        # Заполняем дату выдачи паспорта (если есть)
+        write_issue_date(new_ws, issue_date)  # Дата выдачи паспорта начиная с O35
+
+        # Если ФИО совпадает (fio_match == 1), записываем данные на лист "Данные ФЛ"
+        if fio_match == 1:
+            # Проверяем, существует ли лист "Данные ФЛ"
+            if 'Данные ФЛ' not in new_wb.sheetnames:
+                new_wb.create_sheet('Данные ФЛ')  # Создаем лист, если его нет
+            fl_ws = new_wb['Данные ФЛ']
+
+            # Записываем фамилию, имя и отчество на лист "Данные ФЛ"
+            write_to_cells('I', 12, surname, fl_ws)  # Фамилия начиная с I12
+            write_to_cells('I', 14, name, fl_ws)  # Имя начиная с I14
+            write_to_cells('I', 16, patronymic, fl_ws)  # Отчество начиная с I16
+
+        # Сохраняем изменения
         new_wb.save(new_file_path)
-        new_files.append(new_file_name)  # Добавляем имя нового файла в список
+        new_files.append(new_file_name)
+        logging.info(f"Файл {new_file_name} успешно создан.")
+
+    except Exception as e:
+        logging.error(f"Ошибка при обработке файла {new_file_name}: {e}")
+    finally:
+        if 'new_wb' in locals():
+            new_wb.close()
 
 # Выводим список созданных файлов
-print("Созданные файлы:")
+logging.info("Созданные файлы:")
 for file in new_files:
-    print(file)
+    logging.info(file)
+
+patients_wb.close()

@@ -122,7 +122,7 @@ new_files = []
 
 # Проходим по каждой строке в файле пациентов, начиная с 2-й строки (0 — это заголовок)
 for row in patients_ws.iter_rows(min_row=2, values_only=True):
-    reference_number, surname, name, patronymic, birthdate, period, amount, inn, passport, issue_date, uploaded = row
+    reference_number,fio_match,  surname, name, patronymic, birthdate, period, amount, inn, passport, issue_date,surname2, name2, patronymic2, uploaded = row
 
     # Пропускаем строки, которые уже были обработаны
     if uploaded is not None:

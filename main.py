@@ -17,6 +17,12 @@ if not os.path.exists(patients_file):
 if not os.path.exists(blank_file):
     raise FileNotFoundError(f"Файл {blank_file} не найден.")
 
+# Создаем папку Files, если она не существует
+output_folder = 'Files'
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+    logging.info(f"Папка {output_folder} создана.")
+
 try:
     patients_wb = openpyxl.load_workbook(patients_file)
 except Exception as e:
@@ -149,11 +155,10 @@ def write_birthdate(ws, birthdate):
         cell_address = get_cell_address('BE', 30, index * 2)
         write_to_cell_safe(ws, cell_address, char)
 
-    # Записываем год (начиная с AA35)
+    # Записываем год (начиная с BK30)
     for index, char in enumerate(year):
         cell_address = get_cell_address('BK', 30, index * 2)
         write_to_cell_safe(ws, cell_address, char)
-
 
 # Функция для записи периода
 def write_period(base_col, row, period_value, ws):
@@ -176,7 +181,7 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
     # Создаем имя нового файла
     date_created = datetime.datetime.now().strftime('%Y-%m-%d')
     new_file_name = f'{surname}{name[0]}{patronymic[0]}_{date_created}.xlsx'
-    new_file_path = os.path.join(os.getcwd(), new_file_name)
+    new_file_path = os.path.join(output_folder, new_file_name)  # Сохраняем в папку Files
 
     # Копируем шаблон
     shutil.copy(blank_file, new_file_path)
@@ -209,7 +214,7 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         write_passport(new_ws, passport)  # Паспорт начиная с AO33
 
         # Заполняем дату рождения
-        write_birthdate(new_ws, birthdate)  # Дата выдачи паспорта начиная с O35
+        write_birthdate(new_ws, birthdate)  # Дата рождения начиная с AY30
 
         # Заполняем дату выдачи паспорта (если есть)
         write_issue_date(new_ws, issue_date)  # Дата выдачи паспорта начиная с O35
@@ -229,7 +234,7 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         # Сохраняем изменения
         new_wb.save(new_file_path)
         new_files.append(new_file_name)
-        logging.info(f"Файл {new_file_name} успешно создан.")
+        logging.info(f"Файл {new_file_name} успешно создан в папке {output_folder}.")
 
     except Exception as e:
         logging.error(f"Ошибка при обработке файла {new_file_name}: {e}")

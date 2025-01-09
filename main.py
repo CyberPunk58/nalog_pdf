@@ -46,6 +46,12 @@ def write_to_cell_safe(ws, cell_address, value):
     else:
         cell.value = value
 
+# Функция для записи текста посимвольно в ячейки
+def write_to_cells(base_col, row, text, ws):
+    for index, char in enumerate(text):
+        cell_address = get_cell_address(base_col, row, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
 # Функция для записи номера паспорта
 def write_passport(ws, passport):
     if not passport:  # Пропускаем, если паспорт отсутствует
@@ -117,12 +123,19 @@ def write_issue_date(ws, issue_date):
         cell_address = get_cell_address('AA', 35, index * 2)
         write_to_cell_safe(ws, cell_address, char)
 
+# Функция для записи периода
+def write_period(base_col, row, period_value, ws):
+    period_str = str(period_value)
+    for index, char in enumerate(period_str):
+        cell_address = get_cell_address(base_col, row, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
 # Подготавливаем список для хранения имён новых файлов
 new_files = []
 
 # Проходим по каждой строке в файле пациентов, начиная с 2-й строки (0 — это заголовок)
 for row in patients_ws.iter_rows(min_row=2, values_only=True):
-    reference_number,fio_match,  surname, name, patronymic, birthdate, period, amount, inn, passport, issue_date,surname2, name2, patronymic2, uploaded = row
+    reference_number, fio_match, surname, name, patronymic, birthdate, period, amount, inn, passport, issue_date, surname2, name2, patronymic2, uploaded = row
 
     # Пропускаем строки, которые уже были обработаны
     if uploaded is not None:
@@ -140,44 +153,43 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         new_wb = openpyxl.load_workbook(new_file_path)
         new_ws = new_wb.active
 
-        # Функция для записи текста посимвольно в ячейки
-        def write_to_cells(base_col, row, text):
-            for index, char in enumerate(text):
-                cell_address = get_cell_address(base_col, row, index * 2)
-                write_to_cell_safe(new_ws, cell_address, char)
-
         # Заполняем фамилию, имя и отчество
-        write_to_cells('I', 24, surname)
-        write_to_cells('I', 26, name)
-        write_to_cells('I', 28, patronymic)
+        write_to_cells('I', 24, surname, new_ws)  # Фамилия начиная с I24
+        write_to_cells('I', 26, name, new_ws)  # Имя начиная с I26
+        write_to_cells('I', 28, patronymic, new_ws)  # Отчество начиная с I28
 
         # Заполняем период
-        def write_period(base_col, row, period_value):
-            period_str = str(period_value)
-            for index, char in enumerate(period_str):
-                cell_address = get_cell_address(base_col, row, index * 2)
-                write_to_cell_safe(new_ws, cell_address, char)
-
-        write_period('BU', 11, period)
+        write_period('BU', 11, period, new_ws)  # Период начиная с BU11
 
         # Заполняем сумму
-        write_amount(new_ws, amount)
-        #Записываем копейки
-        write_to_cells('BU', 40, '00')
+        write_amount(new_ws, amount)  # Сумма начиная с BQ40
+        write_to_cells('BU', 40, '00', new_ws)  # Копейки начиная с BU40
 
         # Заполняем ИНН (если есть)
         if inn:
-            write_to_cells('I', 30, str(inn))
+            write_to_cells('I', 30, str(inn), new_ws)  # ИНН начиная с I30
 
         # Заполняем номер справки (если есть)
         if reference_number:
-            write_to_cells('K', 11, str(reference_number))
+            write_to_cells('K', 11, str(reference_number), new_ws)  # Номер справки начиная с K11
 
         # Заполняем паспорт (если есть)
-        write_passport(new_ws, passport)
+        write_passport(new_ws, passport)  # Паспорт начиная с AO33
 
         # Заполняем дату выдачи паспорта (если есть)
-        write_issue_date(new_ws, issue_date)
+        write_issue_date(new_ws, issue_date)  # Дата выдачи паспорта начиная с O35
+
+        # Если ФИО совпадает (fio_match == 1), записываем данные на лист "Данные ФЛ"
+        if fio_match == 1:
+            # Проверяем, существует ли лист "Данные ФЛ"
+            if 'Данные ФЛ' not in new_wb.sheetnames:
+                new_wb.create_sheet('Данные ФЛ')  # Создаем лист, если его нет
+            fl_ws = new_wb['Данные ФЛ']
+
+            # Записываем фамилию, имя и отчество на лист "Данные ФЛ"
+            write_to_cells('I', 12, surname, fl_ws)  # Фамилия начиная с I12
+            write_to_cells('I', 14, name, fl_ws)  # Имя начиная с I14
+            write_to_cells('I', 16, patronymic, fl_ws)  # Отчество начиная с I16
 
         # Сохраняем изменения
         new_wb.save(new_file_path)

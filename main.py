@@ -296,14 +296,14 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
 
             # Заполняем паспорт2 (если есть)
             #write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
-            write_to_cells('AO', 21, str(passport2), fl_ws)  # Записываем паспорт
-
+            write_to_cells('AO', 21, str(passport2), fl_ws)
+            
             # Заполняем ИНН2 (если есть)
             if inn2:
                 write_to_cells('I', 18, str(inn2), fl_ws)
 
             # Заполняем дату рождения
-            write_birthdate_2(fl_ws, birthdate2)  # Дата рождения начиная с AY18 на втором листе
+            write_birthdate_2(fl_ws, birthdate2)
 
             # Заполняем код документа
             if code:

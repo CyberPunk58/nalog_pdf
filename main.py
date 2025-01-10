@@ -220,16 +220,16 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         write_issue_date(new_ws, issue_date)  # Дата выдачи паспорта начиная с O35
 
         # Если ФИО совпадает (fio_match == 1), записываем данные на лист "Данные ФЛ"
-        if fio_match == 1:
+        if surname2:
             # Проверяем, существует ли лист "Данные ФЛ"
             if 'Данные ФЛ' not in new_wb.sheetnames:
                 new_wb.create_sheet('Данные ФЛ')  # Создаем лист, если его нет
             fl_ws = new_wb['Данные ФЛ']
 
             # Записываем фамилию, имя и отчество на лист "Данные ФЛ"
-            write_to_cells('I', 12, surname, fl_ws)  # Фамилия начиная с I12
-            write_to_cells('I', 14, name, fl_ws)  # Имя начиная с I14
-            write_to_cells('I', 16, patronymic, fl_ws)  # Отчество начиная с I16
+            write_to_cells('I', 12, surname2, fl_ws)  # Фамилия начиная с I12
+            write_to_cells('I', 14, name2, fl_ws)  # Имя начиная с I14
+            write_to_cells('I', 16, patronymic2, fl_ws)  # Отчество начиная с I16
 
         # Сохраняем изменения
         new_wb.save(new_file_path)

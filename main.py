@@ -59,13 +59,13 @@ def write_to_cells(base_col, row, text, ws):
         write_to_cell_safe(ws, cell_address, char)
 
 # Функция для записи номера паспорта
-def write_passport(ws, passport):
+def write_passport(ws, passport, start_col, row):
     if not passport:  # Пропускаем, если паспорт отсутствует
         return
 
     passport_str = str(passport)  # Преобразуем номер паспорта в строку
-    start_col = 'AO'  # Начинаем с ячейки AO33
-    row = 33
+    start_col = start_col  # Начинаем с ячейки AO33
+    row = row
 
     # Записываем первые 4 символа
     for i in range(4):
@@ -172,7 +172,26 @@ new_files = []
 
 # Проходим по каждой строке в файле пациентов, начиная с 2-й строки (0 — это заголовок)
 for row in patients_ws.iter_rows(min_row=2, values_only=True):
-    reference_number, fio_match, surname, name, patronymic, birthdate, period, amount, inn, passport, issue_date, surname2, name2, patronymic2, uploaded = row
+    (reference_number,
+     surname,
+     name,
+     patronymic,
+     birthdate,
+     period,
+     amount,
+     code,
+     inn,
+     passport,
+     issue_date,
+     surname2,
+     name2,
+     patronymic2,
+     birthdate2,
+     code2,
+     inn2,
+     passport2,
+     issue_date2,
+     uploaded) = row
 
     # Пропускаем строки, которые уже были обработаны
     if uploaded is not None:
@@ -180,7 +199,12 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
 
     # Создаем имя нового файла
     date_created = datetime.datetime.now().strftime('%Y-%m-%d')
-    new_file_name = f'{surname}{name[0]}{patronymic[0]}_{date_created}.xlsx'
+
+    # Проверяем, что name и patronymic не равны None
+    name_initial = name[0] if name else ''  # Если name None, используем пустую строку
+    patronymic_initial = patronymic[0] if patronymic else ''  # Если patronymic None, используем пустую строку
+
+    new_file_name = f'{surname}{name_initial}{patronymic_initial}_{date_created}.xlsx'
     new_file_path = os.path.join(output_folder, new_file_name)  # Сохраняем в папку Files
 
     # Копируем шаблон
@@ -210,8 +234,13 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         if reference_number:
             write_to_cells('K', 11, str(reference_number), new_ws)  # Номер справки начиная с K11
 
+
+        # Заполняем код документа
+        if code:
+            write_to_cells('O', 33, str(code), new_ws)  # Номер справки начиная с K11
+
         # Заполняем паспорт (если есть)
-        write_passport(new_ws, passport)  # Паспорт начиная с AO33
+        write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
 
         # Заполняем дату рождения
         write_birthdate(new_ws, birthdate)  # Дата рождения начиная с AY30
@@ -219,7 +248,7 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         # Заполняем дату выдачи паспорта (если есть)
         write_issue_date(new_ws, issue_date)  # Дата выдачи паспорта начиная с O35
 
-        # Если ФИО совпадает (fio_match == 1), записываем данные на лист "Данные ФЛ"
+        # Если справка на другого человека (surname2 заполнено), записываем данные на лист "Данные ФЛ"
         if surname2:
             # Проверяем, существует ли лист "Данные ФЛ"
             if 'Данные ФЛ' not in new_wb.sheetnames:

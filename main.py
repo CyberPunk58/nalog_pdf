@@ -98,7 +98,7 @@ def write_amount(ws, amount):
         cell_address = get_cell_address(start_col_letter, row, (index * 2) + 2)
         write_to_cell_safe(ws, cell_address, char)
 
-# Функция для записи даты выдачи паспорта
+# Функция для записи даты выдачи паспорта !!! ПОКА ЭТА ФУНКЦИЯ НЕ ИСПОЛЬЗУЕТСЯ
 def write_issue_date(ws, issue_date):
     if not issue_date:  # Пропускаем, если дата отсутствует
         return
@@ -273,7 +273,8 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
             write_to_cells('O', 33, str(code), new_ws)  # Номер справки начиная с K11
 
         # Заполняем паспорт (если есть)
-        write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
+        write_to_cells('AO', 33, str(passport), new_ws)  # Записываем паспорт
+        # write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
 
         # Заполняем дату рождения
         write_birthdate(new_ws, birthdate)  # Дата рождения начиная с AY30
@@ -294,15 +295,19 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
             write_to_cells('I', 16, patronymic2, fl_ws)  # Отчество начиная с I16
 
             # Заполняем паспорт2 (если есть)
-            write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
+            #write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
+            write_to_cells('AO', 21, str(passport2), fl_ws)  # Записываем паспорт
 
             # Заполняем ИНН2 (если есть)
             if inn2:
-                write_to_cells('I', 18, str(inn2), fl_ws)  # ИНН начиная с I30
+                write_to_cells('I', 18, str(inn2), fl_ws)
 
             # Заполняем дату рождения
             write_birthdate_2(fl_ws, birthdate2)  # Дата рождения начиная с AY18 на втором листе
 
+            # Заполняем код документа
+            if code:
+                write_to_cells('O', 21, str(code2), fl_ws)
 
 
         # Сохраняем изменения

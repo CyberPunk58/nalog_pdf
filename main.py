@@ -58,7 +58,7 @@ def write_to_cells(base_col, row, text, ws):
         cell_address = get_cell_address(base_col, row, index * 2)
         write_to_cell_safe(ws, cell_address, char)
 
-# Функция для записи номера паспорта
+# Функция для записи номера паспорта !!! ПОКА ЭТА ФУНКЦИЯ НЕ ИСПОЛЬЗУЕТСЯ
 def write_passport(ws, passport, start_col, row):
     if not passport:  # Пропускаем, если паспорт отсутствует
         return
@@ -98,7 +98,7 @@ def write_amount(ws, amount):
         cell_address = get_cell_address(start_col_letter, row, (index * 2) + 2)
         write_to_cell_safe(ws, cell_address, char)
 
-# Функция для записи даты выдачи паспорта !!! ПОКА ЭТА ФУНКЦИЯ НЕ ИСПОЛЬЗУЕТСЯ
+# Функция для записи даты выдачи паспорта
 def write_issue_date(ws, issue_date):
     if not issue_date:  # Пропускаем, если дата отсутствует
         return
@@ -128,6 +128,38 @@ def write_issue_date(ws, issue_date):
     for index, char in enumerate(year):
         cell_address = get_cell_address('AA', 35, index * 2)
         write_to_cell_safe(ws, cell_address, char)
+
+# Функция для записи даты выдачи ВТОРОГО паспорта
+def write_issue_date_2(ws, issue_date2):
+    if not issue_date2:  # Пропускаем, если дата отсутствует
+        return
+
+    # Преобразуем дату в строку (если это объект datetime)
+    if isinstance(issue_date2, datetime.datetime):
+        issue_date_str = issue_date2.strftime('%d.%m.%Y')
+    else:
+        issue_date_str = str(issue_date2)
+
+    # Разделяем дату на день, месяц и год
+    day = issue_date_str[:2]  # Первые два символа (день)
+    month = issue_date_str[3:5]  # Вторые два символа (месяц)
+    year = issue_date_str[6:]  # Последние четыре символа (год)
+
+    # Записываем день
+    for index, char in enumerate(day):
+        cell_address = get_cell_address('O', 23, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+    # Записываем месяц
+    for index, char in enumerate(month):
+        cell_address = get_cell_address('U', 23, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
+    # Записываем год
+    for index, char in enumerate(year):
+        cell_address = get_cell_address('AA', 23, index * 2)
+        write_to_cell_safe(ws, cell_address, char)
+
 
 # Функция для записи даты рождения
 def write_birthdate(ws, birthdate):
@@ -176,17 +208,17 @@ def write_birthdate_2(ws, birthdate2):
     month = birthdate2_str[3:5]  # Вторые два символа (месяц)
     year = birthdate2_str[6:]  # Последние четыре символа (год)
 
-    # Записываем день (начиная с AY30)
+    # Записываем день
     for index, char in enumerate(day):
         cell_address = get_cell_address('AY', 18, index * 2)
         write_to_cell_safe(ws, cell_address, char)
 
-    # Записываем месяц (начиная с BE30)
+    # Записываем месяц
     for index, char in enumerate(month):
         cell_address = get_cell_address('BE', 18, index * 2)
         write_to_cell_safe(ws, cell_address, char)
 
-    # Записываем год (начиная с BK30)
+    # Записываем год
     for index, char in enumerate(year):
         cell_address = get_cell_address('BK', 18, index * 2)
         write_to_cell_safe(ws, cell_address, char)
@@ -297,7 +329,10 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
             # Заполняем паспорт2 (если есть)
             #write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
             write_to_cells('AO', 21, str(passport2), fl_ws)
-            
+
+            # Заполняем дату выдачи паспорта (если есть)
+            write_issue_date_2(fl_ws, issue_date)  # Дата выдачи паспорта начиная с O35
+
             # Заполняем ИНН2 (если есть)
             if inn2:
                 write_to_cells('I', 18, str(inn2), fl_ws)

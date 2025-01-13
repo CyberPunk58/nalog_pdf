@@ -322,8 +322,15 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
             write_to_cells('O', 33, str(code), new_ws)
 
         # Заполняем паспорт (если есть)
-        write_to_cells('AO', 33, str(passport), new_ws)
+        #write_to_cells('AO', 33, str(passport), new_ws)
         # write_passport(new_ws, passport, 'AO', 33) #Старый вариант,где разделялись номер и серия паспорта пробелом. Пока раздеояем пробелом вручную.
+
+        # Заполняем паспорт (если есть)
+        if passport is not None:  # Проверяем, что passport не равен None
+            write_to_cells('AO', 33, str(passport), new_ws)
+        else:
+            write_to_cells('AO', 33, '', new_ws)  # Записываем пустую строку, если passport равен None
+
 
         # Заполняем дату рождения
         write_birthdate(new_ws, birthdate)
@@ -358,7 +365,7 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
             write_birthdate_2(fl_ws, birthdate2)
 
             # Заполняем код документа
-            if code:
+            if code2:
                 write_to_cells('O', 21, str(code2), fl_ws)
 
 

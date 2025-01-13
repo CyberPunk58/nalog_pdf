@@ -319,17 +319,17 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
 
         # Заполняем код документа
         if code:
-            write_to_cells('O', 33, str(code), new_ws)  # Номер справки начиная с K11
+            write_to_cells('O', 33, str(code), new_ws)
 
         # Заполняем паспорт (если есть)
-        write_to_cells('AO', 33, str(passport), new_ws)  # Записываем паспорт
-        # write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
+        write_to_cells('AO', 33, str(passport), new_ws)
+        # write_passport(new_ws, passport, 'AO', 33) #Старый вариант,где разделялись номер и серия паспорта пробелом. Пока раздеояем пробелом вручную.
 
         # Заполняем дату рождения
-        write_birthdate(new_ws, birthdate)  # Дата рождения начиная с AY30
+        write_birthdate(new_ws, birthdate)
 
         # Заполняем дату выдачи паспорта (если есть)
-        write_issue_date(new_ws, issue_date)  # Дата выдачи паспорта начиная с O35
+        write_issue_date(new_ws, issue_date)
 
         # Если справка на другого человека (surname2 заполнено), записываем данные на лист "Данные ФЛ"
         if surname2:
@@ -339,16 +339,16 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
             fl_ws = new_wb['Данные ФЛ']
 
             # Записываем фамилию, имя и отчество на лист "Данные ФЛ"
-            write_to_cells('I', 12, surname2, fl_ws)  # Фамилия начиная с I12
-            write_to_cells('I', 14, name2, fl_ws)  # Имя начиная с I14
-            write_to_cells('I', 16, patronymic2, fl_ws)  # Отчество начиная с I16
+            write_to_cells('I', 12, surname2, fl_ws)
+            write_to_cells('I', 14, name2, fl_ws)
+            write_to_cells('I', 16, patronymic2, fl_ws)
 
             # Заполняем паспорт2 (если есть)
-            #write_passport(new_ws, passport, 'AO', 33)  # Паспорт начиная с AO33
+            #write_passport(new_ws, passport, 'AO', 33)
             write_to_cells('AO', 21, str(passport2), fl_ws)
 
             # Заполняем дату выдачи паспорта (если есть)
-            write_issue_date_2(fl_ws, issue_date)  # Дата выдачи паспорта начиная с O35
+            write_issue_date_2(fl_ws, issue_date2)
 
             # Заполняем ИНН2 (если есть)
             if inn2:

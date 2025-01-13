@@ -160,7 +160,6 @@ def write_issue_date_2(ws, issue_date2):
         cell_address = get_cell_address('AA', 23, index * 2)
         write_to_cell_safe(ws, cell_address, char)
 
-
 # Функция для записи даты рождения
 def write_birthdate(ws, birthdate):
     if not birthdate:  # Пропускаем, если дата отсутствует
@@ -223,14 +222,29 @@ def write_birthdate_2(ws, birthdate2):
         cell_address = get_cell_address('BK', 18, index * 2)
         write_to_cell_safe(ws, cell_address, char)
 
-
-
 # Функция для записи периода
 def write_period(base_col, row, period_value, ws):
     period_str = str(period_value)
     for index, char in enumerate(period_str):
         cell_address = get_cell_address(base_col, row, index * 2)
         write_to_cell_safe(ws, cell_address, char)
+
+# Функция для записи сегодняшней даты
+def write_today_date(ws):
+    # Получаем сегодняшнюю дату
+    today = datetime.datetime.now()
+    day = today.strftime('%d')  # День (две цифры)
+    month = today.strftime('%m')  # Месяц (две цифры)
+    year = today.strftime('%Y')  # Год (четыре цифры)
+
+    # Записываем день в ячейку V55
+    write_to_cells('V', 55, day, ws)
+
+    # Записываем месяц в ячейку AB55
+    write_to_cells('AB', 55, month, ws)
+
+    # Записываем год в ячейку AH55
+    write_to_cells('AH', 55, year, ws)
 
 # Подготавливаем список для хранения имён новых файлов
 new_files = []
@@ -278,6 +292,9 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
     try:
         new_wb = openpyxl.load_workbook(new_file_path)
         new_ws = new_wb.active
+
+        # Записываем сегодняшнюю дату на первый лист
+        write_today_date(new_ws)
 
         # Заполняем фамилию, имя и отчество
         write_to_cells('I', 24, surname, new_ws)  # Фамилия начиная с I24

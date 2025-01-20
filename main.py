@@ -3,6 +3,7 @@ import datetime
 import os
 import shutil
 import logging
+from openpyxl.drawing.image import Image  # Добавлено для работы с изображениями
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -316,21 +317,15 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
         if reference_number:
             write_to_cells('K', 11, str(reference_number), new_ws)  # Номер справки начиная с K11
 
-
         # Заполняем код документа
         if code:
             write_to_cells('O', 33, str(code), new_ws)
-
-        # Заполняем паспорт (если есть)
-        #write_to_cells('AO', 33, str(passport), new_ws)
-        # write_passport(new_ws, passport, 'AO', 33) #Старый вариант,где разделялись номер и серия паспорта пробелом. Пока раздеояем пробелом вручную.
 
         # Заполняем паспорт (если есть)
         if passport is not None:  # Проверяем, что passport не равен None
             write_to_cells('AO', 33, str(passport), new_ws)
         else:
             write_to_cells('AO', 33, '', new_ws)  # Записываем пустую строку, если passport равен None
-
 
         # Заполняем дату рождения
         write_birthdate(new_ws, birthdate)
@@ -351,7 +346,6 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
             write_to_cells('I', 16, patronymic2, fl_ws)
 
             # Заполняем паспорт2 (если есть)
-            #write_passport(new_ws, passport, 'AO', 33)
             write_to_cells('AO', 21, str(passport2), fl_ws)
 
             # Заполняем дату выдачи паспорта (если есть)
@@ -368,6 +362,9 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
             if code2:
                 write_to_cells('O', 21, str(code2), fl_ws)
 
+        # Добавляем изображение на лист
+        img = Image('path_to_image.png')  # Укажите путь к изображению
+        new_ws.add_image(img, 'A1')  # Укажите ячейку, куда нужно вставить изображение
 
         # Сохраняем изменения
         new_wb.save(new_file_path)

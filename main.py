@@ -363,8 +363,9 @@ for row in patients_ws.iter_rows(min_row=2, values_only=True):
                 write_to_cells('O', 21, str(code2), fl_ws)
 
         # Добавляем изображение на лист
-        img = Image('path_to_image.png')  # Укажите путь к изображению
-        new_ws.add_image(img, 'A1')  # Укажите ячейку, куда нужно вставить изображение
+        img = Image('code.png')  # Укажите путь к изображению
+        #new_ws.add_image(img, 'C1')  # Укажите ячейку, куда нужно вставить изображение
+        #new_ws.
 
         # Сохраняем изменения
         new_wb.save(new_file_path)
